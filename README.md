@@ -2965,12 +2965,40 @@ from imblearn.under_sampling import RandomUnderSampler, TomekLinks
 from imblearn.combine import SMOTETomek, SMOTEENN
 from imblearn.pipeline import Pipeline as ImbPipeline
 
-# SMOTE — synthetic minority oversampling
-sm          = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=42)
+# Applying Random Under Sampling
+from imblearn.under_sampling import RandomUnderSampler
+
+rus = RandomUnderSampler(random_state=42)
+X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+
+# Applying Random Over Sampling
+from imblearn.over_sampling import RandomOverSampler
+
+ros = RandomOverSampler(random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X_train, y_train)
+
+
+# Applying Ensemble Method/ Balanced Random Forest (Recomanded)
+from imblearn.ensemble import BalancedRandomForestClassifier
+
+classifier = BalancedRandomForestClassifier(random_state=42)
+classifier.fit(X_train, y_train)
+
+# Cost Sensitive Learning/ Class Weights 
+# Create a logistic regression model with class weights
+model = LogisticRegression(class_weight={0:50,1:1}, solver='liblinear')   # Can take other models also
+
+# Train the model
+model.fit(X_train, y_train)
+
+
+
+# SMOTE — synthetic minority oversampling (Recomanded)
+sm = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=42)
 X_res, y_res = sm.fit_resample(X_train, y_train)
 
 # Combined over+under sampling
-smt          = SMOTETomek(random_state=42)
+smt = SMOTETomek(random_state=42)
 X_res, y_res = smt.fit_resample(X_train, y_train)
 
 # In a pipeline (avoids leakage)
