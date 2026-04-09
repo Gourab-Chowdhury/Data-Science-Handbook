@@ -2977,7 +2977,6 @@ from imblearn.over_sampling import RandomOverSampler
 ros = RandomOverSampler(random_state=42)
 X_resampled, y_resampled = ros.fit_resample(X_train, y_train)
 
-
 # Applying Ensemble Method/ Balanced Random Forest (Recomanded)
 from imblearn.ensemble import BalancedRandomForestClassifier
 
@@ -2990,8 +2989,6 @@ model = LogisticRegression(class_weight={0:50,1:1}, solver='liblinear')   # Can 
 
 # Train the model
 model.fit(X_train, y_train)
-
-
 
 # SMOTE — synthetic minority oversampling (Recomanded)
 sm = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=42)
