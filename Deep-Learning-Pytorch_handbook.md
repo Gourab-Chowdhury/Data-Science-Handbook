@@ -304,6 +304,50 @@ class TabularDataset(Dataset):
     def __len__(self):  return len(self.y)
     def __getitem__(self, i): return self.X[i], self.y[i]
 ```
+Or
+```python
+import torch
+import torch.nn as nn
+from functools import reduce
+
+def build_layer(in_dim: int, out_dim: int, use_bn: bool = True, 
+                dropout_p: float = 0.3, is_final: bool = False) -> list:
+    """Build a single layer with optional BN and Dropout."""
+    if is_final:
+        return [nn.Linear(in_dim, out_dim)]
+    
+    layer = [nn.Linear(in_dim, out_dim)]
+    if use_bn:
+        layer.append(nn.BatchNorm1d(out_dim))
+    layer.extend([nn.ReLU(), nn.Dropout(dropout_p)])
+    return layer
+
+def build_mlp_functional(input_dim: int, hidden_dims: list[int], output_dim: int,
+                         dropout_p: float = 0.3, use_bn: bool = True) -> nn.Sequential:
+    """Build MLP using functional composition."""
+    dims = [input_dim] + hidden_dims + [output_dim]
+    layers = []
+    
+    for i in range(len(dims) - 1):
+        is_final = (i == len(dims) - 2)
+        layers.extend(build_layer(dims[i], dims[i+1], use_bn, dropout_p, is_final))
+    
+    model = nn.Sequential(*layers)
+    _init_weights_fn(model)
+    return model
+
+def _init_weights_fn(model):
+    for m in model.modules():
+        if isinstance(m, nn.Linear):
+            nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
+            nn.init.zeros_(m.bias)
+        elif isinstance(m, nn.BatchNorm1d):
+            nn.init.ones_(m.weight)
+            nn.init.zeros_(m.bias)
+
+# Usage
+model = build_mlp_functional(input_dim=128, hidden_dims=[512, 256, 128], output_dim=10)
+```
 
 ### 2.4 Key Hyperparameters
 
