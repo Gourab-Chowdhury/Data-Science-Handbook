@@ -460,47 +460,398 @@ smooth_ce = nn.CrossEntropyLoss(label_smoothing=0.1)
 
 Or
 ```python
+"""
+A comprehensive, reusable Multi-Layer Perceptron (MLP) implementation in PyTorch.
+Includes model definition, training, validation, early stopping, checkpointing, and evaluation.
+"""
+
 import torch
 import torch.nn as nn
-from functools import reduce
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+import numpy as np
+from typing import Tuple, List, Optional, Callable, Dict, Any
+import copy
 
-def build_layer(in_dim: int, out_dim: int, use_bn: bool = True, 
-                dropout_p: float = 0.3, is_final: bool = False) -> list:
-    """Build a single layer with optional BN and Dropout."""
-    if is_final:
-        return [nn.Linear(in_dim, out_dim)]
-    
-    layer = [nn.Linear(in_dim, out_dim)]
-    if use_bn:
-        layer.append(nn.BatchNorm1d(out_dim))
-    layer.extend([nn.ReLU(), nn.Dropout(dropout_p)])
-    return layer
+# -------------------------------
+# 1. MLP Model Definition
+# -------------------------------
+class MLP(nn.Module):
+    """
+    A flexible Multi-Layer Perceptron (MLP) with configurable:
+        - number of hidden layers and their sizes
+        - activation functions (ReLU, Tanh, Sigmoid, etc.)
+        - dropout rate for regularization
+        - batch normalization option
+        - output activation (e.g., Sigmoid for binary classification, Softmax for multi-class, None for regression)
 
-def build_mlp_functional(input_dim: int, hidden_dims: list[int], output_dim: int,
-                         dropout_p: float = 0.3, use_bn: bool = True) -> nn.Sequential:
-    """Build MLP using functional composition."""
-    dims = [input_dim] + hidden_dims + [output_dim]
-    layers = []
-    
-    for i in range(len(dims) - 1):
-        is_final = (i == len(dims) - 2)
-        layers.extend(build_layer(dims[i], dims[i+1], use_bn, dropout_p, is_final))
-    
-    model = nn.Sequential(*layers)
-    _init_weights_fn(model)
-    return model
+    Args:
+        input_dim (int): Dimensionality of input features.
+        hidden_dims (List[int]): List of hidden layer sizes (e.g., [128, 64]).
+        output_dim (int): Dimensionality of output.
+        activation (str): Activation function name ('relu', 'tanh', 'sigmoid', 'leaky_relu').
+        dropout_rate (float): Dropout probability (0 = no dropout).
+        use_batchnorm (bool): If True, apply BatchNorm after each hidden layer.
+        output_activation (Optional[str]): Output activation ('sigmoid', 'softmax', 'none').
+    """
+    def __init__(self,
+                 input_dim: int,
+                 hidden_dims: List[int],
+                 output_dim: int,
+                 activation: str = 'relu',
+                 dropout_rate: float = 0.0,
+                 use_batchnorm: bool = False,
+                 output_activation: Optional[str] = None):
+        super(MLP, self).__init__()
 
-def _init_weights_fn(model):
-    for m in model.modules():
-        if isinstance(m, nn.Linear):
-            nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
-            nn.init.zeros_(m.bias)
-        elif isinstance(m, nn.BatchNorm1d):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
+        # Activation function mapping
+        act_fn_map = {
+            'relu': nn.ReLU(inplace=True),
+            'tanh': nn.Tanh(),
+            'sigmoid': nn.Sigmoid(),
+            'leaky_relu': nn.LeakyReLU(0.1, inplace=True)
+        }
+        self.activation = act_fn_map[activation.lower()]
 
-# Usage
-model = build_mlp_functional(input_dim=128, hidden_dims=[512, 256, 128], output_dim=10)
+        # Build layers
+        layers = []
+        prev_dim = input_dim
+        for hidden_dim in hidden_dims:
+            # Linear layer
+            layers.append(nn.Linear(prev_dim, hidden_dim))
+            # BatchNorm (optional)
+            if use_batchnorm:
+                layers.append(nn.BatchNorm1d(hidden_dim))
+            # Activation
+            layers.append(self.activation)
+            # Dropout (optional)
+            if dropout_rate > 0:
+                layers.append(nn.Dropout(dropout_rate))
+            prev_dim = hidden_dim
+
+        # Output layer (no activation yet, we may apply it separately)
+        layers.append(nn.Linear(prev_dim, output_dim))
+        self.net = nn.Sequential(*layers)
+
+        # Output activation (if any)
+        self.output_activation = None
+        if output_activation is not None:
+            out_act_map = {
+                'sigmoid': nn.Sigmoid(),
+                'softmax': nn.Softmax(dim=1),
+                'none': nn.Identity()
+            }
+            self.output_activation = out_act_map[output_activation.lower()]
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
+        x = self.net(x)
+        if self.output_activation is not None:
+            x = self.output_activation(x)
+        return x
+
+
+# -------------------------------
+# 2. Training and Validation Functions
+# -------------------------------
+def train_epoch(model: nn.Module,
+                dataloader: DataLoader,
+                loss_fn: Callable,
+                optimizer: optim.Optimizer,
+                device: torch.device,
+                metrics: Optional[Dict[str, Callable]] = None) -> Dict[str, float]:
+    """
+    Train the model for one epoch.
+
+    Args:
+        model: PyTorch model.
+        dataloader: DataLoader for training data.
+        loss_fn: Loss function (e.g., nn.CrossEntropyLoss()).
+        optimizer: Optimizer (e.g., Adam).
+        device: 'cuda' or 'cpu'.
+        metrics: Dictionary of metric functions (e.g., {'accuracy': accuracy_fn}).
+                 Each metric function takes (outputs, targets) and returns a scalar.
+
+    Returns:
+        Dictionary containing average loss and any metrics for the epoch.
+    """
+    model.train()
+    total_loss = 0.0
+    metric_values = {name: 0.0 for name in metrics} if metrics else {}
+
+    for inputs, targets in dataloader:
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        # Forward pass
+        outputs = model(inputs)
+        loss = loss_fn(outputs, targets)
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # Accumulate loss
+        total_loss += loss.item() * inputs.size(0)
+
+        # Accumulate metrics (if any)
+        if metrics:
+            with torch.no_grad():
+                for name, metric_fn in metrics.items():
+                    metric_values[name] += metric_fn(outputs, targets) * inputs.size(0)
+
+    # Average over dataset
+    n_samples = len(dataloader.dataset)
+    avg_loss = total_loss / n_samples
+    epoch_metrics = {'loss': avg_loss}
+    for name in metric_values:
+        epoch_metrics[name] = metric_values[name] / n_samples
+    return epoch_metrics
+
+
+@torch.no_grad()
+def evaluate(model: nn.Module,
+             dataloader: DataLoader,
+             loss_fn: Callable,
+             device: torch.device,
+             metrics: Optional[Dict[str, Callable]] = None) -> Dict[str, float]:
+    """
+    Evaluate the model on a validation/test set.
+
+    Args:
+        model: PyTorch model.
+        dataloader: DataLoader for evaluation data.
+        loss_fn: Loss function.
+        device: 'cuda' or 'cpu'.
+        metrics: Dictionary of metric functions.
+
+    Returns:
+        Dictionary containing average loss and metrics.
+    """
+    model.eval()
+    total_loss = 0.0
+    metric_values = {name: 0.0 for name in metrics} if metrics else {}
+
+    for inputs, targets in dataloader:
+        inputs, targets = inputs.to(device), targets.to(device)
+        outputs = model(inputs)
+        loss = loss_fn(outputs, targets)
+
+        total_loss += loss.item() * inputs.size(0)
+        if metrics:
+            for name, metric_fn in metrics.items():
+                metric_values[name] += metric_fn(outputs, targets) * inputs.size(0)
+
+    n_samples = len(dataloader.dataset)
+    avg_loss = total_loss / n_samples
+    eval_metrics = {'loss': avg_loss}
+    for name in metric_values:
+        eval_metrics[name] = metric_values[name] / n_samples
+    return eval_metrics
+
+
+# -------------------------------
+# 3. Full Training Loop with Early Stopping & Checkpointing
+# -------------------------------
+def train_model(model: nn.Module,
+                train_loader: DataLoader,
+                val_loader: DataLoader,
+                loss_fn: Callable,
+                optimizer: optim.Optimizer,
+                epochs: int,
+                device: torch.device,
+                metrics: Optional[Dict[str, Callable]] = None,
+                early_stopping_patience: int = 10,
+                checkpoint_path: Optional[str] = None,
+                scheduler: Optional[optim.lr_scheduler._LRScheduler] = None) -> Dict[str, List[float]]:
+    """
+    Full training loop with early stopping and optional model checkpointing.
+
+    Args:
+        model: PyTorch model.
+        train_loader: DataLoader for training.
+        val_loader: DataLoader for validation.
+        loss_fn: Loss function.
+        optimizer: Optimizer.
+        epochs: Maximum number of epochs.
+        device: Device.
+        metrics: Dictionary of metric functions.
+        early_stopping_patience: Number of epochs with no improvement on val_loss to stop.
+        checkpoint_path: If provided, saves the best model (lowest val_loss) to this path.
+        scheduler: Optional learning rate scheduler (e.g., ReduceLROnPlateau).
+
+    Returns:
+        Dictionary with keys 'train_loss', 'val_loss', and any metrics, each a list of epoch values.
+    """
+    # History tracking
+    history = {'train_loss': [], 'val_loss': []}
+    if metrics:
+        for name in metrics:
+            history[f'train_{name}'] = []
+            history[f'val_{name}'] = []
+
+    best_val_loss = float('inf')
+    epochs_no_improve = 0
+    best_model_state = None
+
+    for epoch in range(1, epochs + 1):
+        # Train one epoch
+        train_metrics = train_epoch(model, train_loader, loss_fn, optimizer, device, metrics)
+        # Validate
+        val_metrics = evaluate(model, val_loader, loss_fn, device, metrics)
+
+        # Store history
+        history['train_loss'].append(train_metrics['loss'])
+        history['val_loss'].append(val_metrics['loss'])
+        for name in metrics:
+            history[f'train_{name}'].append(train_metrics[name])
+            history[f'val_{name}'].append(val_metrics[name])
+
+        # Print progress
+        print(f"Epoch {epoch:3d}/{epochs} | "
+              f"Train Loss: {train_metrics['loss']:.4f} | Val Loss: {val_metrics['loss']:.4f} | "
+              + (" | ".join([f"Train {n}: {train_metrics[n]:.4f} Val {n}: {val_metrics[n]:.4f}" for n in (metrics or {})])))
+
+        # Early stopping & checkpointing based on validation loss
+        if val_metrics['loss'] < best_val_loss:
+            best_val_loss = val_metrics['loss']
+            epochs_no_improve = 0
+            best_model_state = copy.deepcopy(model.state_dict())
+            if checkpoint_path:
+                torch.save(best_model_state, checkpoint_path)
+                print(f"  -> Saved best model to {checkpoint_path}")
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= early_stopping_patience:
+                print(f"Early stopping triggered after {epoch} epochs.")
+                break
+
+        # Learning rate scheduling (if provided)
+        if scheduler is not None:
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(val_metrics['loss'])
+            else:
+                scheduler.step()
+
+    # Restore best model (if early stopping or checkpointing was used)
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+        print(f"Restored best model with validation loss: {best_val_loss:.4f}")
+
+    return history
+
+
+# -------------------------------
+# 4. Utility Functions
+# -------------------------------
+def accuracy_fn(outputs: torch.Tensor, targets: torch.Tensor) -> float:
+    """
+    Accuracy for classification (supports both one-hot and class indices).
+    Assumes outputs are logits or probabilities, targets are class indices.
+    """
+    preds = torch.argmax(outputs, dim=1)
+    return (preds == targets).float().mean().item()
+
+
+def prepare_dataloaders(X_train: np.ndarray, y_train: np.ndarray,
+                        X_val: np.ndarray, y_val: np.ndarray,
+                        batch_size: int = 32,
+                        shuffle_train: bool = True) -> Tuple[DataLoader, DataLoader]:
+    """
+    Convert numpy arrays to PyTorch DataLoaders.
+
+    Args:
+        X_train, y_train: Training features and labels.
+        X_val, y_val: Validation features and labels.
+        batch_size: Batch size.
+        shuffle_train: Whether to shuffle training data.
+
+    Returns:
+        Tuple of (train_loader, val_loader).
+    """
+    # Convert to torch tensors
+    X_train_t = torch.tensor(X_train, dtype=torch.float32)
+    y_train_t = torch.tensor(y_train, dtype=torch.long)  # use long for classification
+    X_val_t = torch.tensor(X_val, dtype=torch.float32)
+    y_val_t = torch.tensor(y_val, dtype=torch.long)
+
+    train_dataset = TensorDataset(X_train_t, y_train_t)
+    val_dataset = TensorDataset(X_val_t, y_val_t)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle_train)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    return train_loader, val_loader
+
+
+# -------------------------------
+# 5. Example Usage (Classification)
+# -------------------------------
+if __name__ == "__main__":
+    # Generate synthetic data for demonstration (binary classification)
+    from sklearn.datasets import make_classification
+    from sklearn.model_selection import train_test_split
+
+    # Create dataset
+    X, y = make_classification(n_samples=2000, n_features=20, n_classes=2, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Prepare DataLoaders
+    batch_size = 64
+    train_loader, val_loader = prepare_dataloaders(X_train, y_train, X_val, y_val, batch_size)
+
+    # Model parameters
+    input_dim = X_train.shape[1]
+    hidden_dims = [128, 64]
+    output_dim = 2  # two classes
+    model = MLP(
+        input_dim=input_dim,
+        hidden_dims=hidden_dims,
+        output_dim=output_dim,
+        activation='relu',
+        dropout_rate=0.3,
+        use_batchnorm=True,
+        output_activation='softmax'  # for multi-class probabilities
+    )
+
+    # Loss, optimizer, metrics
+    loss_fn = nn.CrossEntropyLoss()  # expects raw logits, but we use softmax output; still works
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    metrics = {'accuracy': accuracy_fn}
+
+    # Device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
+    # Optional learning rate scheduler
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
+
+    # Train
+    history = train_model(
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        epochs=50,
+        device=device,
+        metrics=metrics,
+        early_stopping_patience=10,
+        checkpoint_path='best_model.pth',
+        scheduler=scheduler
+    )
+
+    # Final evaluation (you could also load the best model)
+    final_val_metrics = evaluate(model, val_loader, loss_fn, device, metrics)
+    print("\nFinal validation results:")
+    for k, v in final_val_metrics.items():
+        print(f"  {k}: {v:.4f}")
+
+    # Plot history (optional, requires matplotlib)
+    # import matplotlib.pyplot as plt
+    # plt.plot(history['train_loss'], label='Train Loss')
+    # plt.plot(history['val_loss'], label='Val Loss')
+    # plt.legend()
+    # plt.show()
 ```
 
 
