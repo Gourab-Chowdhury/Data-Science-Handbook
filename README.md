@@ -2084,11 +2084,10 @@ svr = SVR(C=10, kernel="rbf", gamma="scale", epsilon=0.1)
 lsvc = LinearSVC(C=1.0, max_iter=5000, class_weight="balanced")
 ```
 
-### KNN & Naive Bayes
+### K - Nearest Neighbour(KNN)
 
 ```python
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 # KNN Classifier (scale features!)
 knn = KNeighborsClassifier(
@@ -2107,6 +2106,13 @@ for k in range(1, 30):
     sc  = cross_val_score(knn, X_scaled, y, cv=5).mean()
     k_scores.append(sc)
 best_k = np.argmax(k_scores) + 1
+```
+
+
+### KNN & Naive Bayes
+
+```python
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 # Gaussian Naive Bayes (continuous features)
 gnb = GaussianNB(var_smoothing=1e-9)
