@@ -366,6 +366,50 @@ df = pd.DataFrame(records)
 
 ## 4. Missing Values & Duplicates
 
+### Drop row, column and specific value
+```python
+import pandas as pd
+import numpy as np
+
+## Drop Rows
+
+# Drop Rows by Index Label
+df = df.drop(index=0)             # Drop a single row by its index label
+df = df.drop(index=[1, 3, 5])     # Drop multiple rows by passing a list of index labels
+
+# Drop Rows Based on a Condition (Boolean Indexing)
+df = df[df['Age'] >= 25]                       # Drops all rows where the Age is less than 25 (keeps Age >= 25)
+df = df.drop(df[df['Age'] < 25].index)         # Alternative: Find matching indices and drop them explicitly
+
+# Drop Rows by Numerical Position (Slicing)
+df = df.iloc[2:]   # Drop the first 2 rows
+df = df.iloc[:-3]  # Drop the last 3 rows
+
+# Drop rows based on a specific column value
+matching_indices = df[df['Your_Column_Name'] == '<Spacific_value>'].index    # Find the index labels for matching rows
+df = df.drop(index=matching_indices)                                 # Drop those specific indices
+
+
+## Drop Column
+df = df.drop(columns='col')                     # Single Column
+df = df.drop(columns=['col1', 'col2', 'col3'])  # Multiple Columns
+df = df.drop('col', axis=1)                     # Using Axis
+
+# Drop Column if it Contains a Specific Value
+cols_to_drop = [col for col in df.columns if (df[col] == '<Spacific_value_name>').any()]   # Identify which columns contain the target value
+df = df.drop(columns=cols_to_drop)                                            # Drop those specific columns
+
+# Drop Column if All Values Match
+# Drops columns where EVERY row is '<Spacific_value_name>'
+cols_to_drop = [col for col in df.columns if (df[col] == '<Spacific_value_name>').all()]
+df = df.drop(columns=cols_to_drop)
+
+# Drop Column Based on a Numeric Threshold
+cols_to_drop = [col for col in df.columns if df[col].max() > 100]
+df = df.drop(columns=cols_to_drop)
+
+
+```
 ### Detecting & Removing Nulls
 
 ```python
