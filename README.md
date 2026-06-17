@@ -12,6 +12,7 @@
 - [Parquet, Feather, APIs & Cloud](#3-parquet-feather-apis--cloud)
 
 ### 🧹 Data Cleaning
+- [Drop row, column and specific value](#drop-row-column-and-specific-value)
 - [Missing Values & Duplicates](#4-missing-values--duplicates)
 - [Dtypes, Type Conversion & Dates](#5-dtypes-type-conversion--dates)
 - [Outlier Detection & Treatment](#6-outlier-detection--treatment)
