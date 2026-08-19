@@ -530,14 +530,22 @@ df["date"] = pd.to_datetime(df["date"],
 # Extract components
 df["year"]    = df["date"].dt.year
 df["month"]   = df["date"].dt.month
+df["month"]   = df["date"].dt.month_name()
 df["day"]     = df["date"].dt.day
 df["weekday"] = df["date"].dt.day_name()
 df["quarter"] = df["date"].dt.quarter
 df["week"]    = df["date"].dt.isocalendar().week
 df["hour"]    = df["date"].dt.hour
+df["is_wknd"] = df["date"].dt.dayofweek
 df["is_wknd"] = df["date"].dt.dayofweek >= 5
+df["wk_of_year"] = df["date"].dt.week
 
 # Timedelta
+df["time"] = df["date"].dt.time
+df["hours"] = df["date"].dt.hour
+df["minutes"] = df["date"].dt.minute
+df["sec"] = df["date"].dt.second
+
 df["days_since"] = (pd.Timestamp.today() - df["date"]).dt.days
 df["age_years"]  = df["days_since"] / 365.25
 
