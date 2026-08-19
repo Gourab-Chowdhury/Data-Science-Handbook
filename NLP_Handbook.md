@@ -21,25 +21,79 @@
 **[Part 0 — Setup & Installation](#part-0--setup--installation)**
 
 **[Part 1 — Core Libraries](#part-1--core-libraries)**
-[1.1 NLTK](#11-nltk) · [1.2 spaCy](#12-spacy) · [1.3 TextBlob](#13-textblob) · [1.4 Hugging Face Transformers](#14-hugging-face-transformers) · [1.5 Gensim](#15-gensim) · [1.6 Other Notable NLP Libraries](#16-other-notable-nlp-libraries)
+[1.1 NLTK](#11-nltk)
+[1.2 spaCy](#12-spacy)
+[1.3 TextBlob](#13-textblob)
+[1.4 Hugging Face Transformers](#14-hugging-face-transformers)
+[1.5 Gensim](#15-gensim)
+[1.6 Other Notable NLP Libraries](#16-other-notable-nlp-libraries)
 
 **[Part 2 — Text Preprocessing](#part-2--text-preprocessing)**
-[2.1 Tokenization](#21-tokenization) · [2.2 Stopword Removal](#22-stopword-removal) · [2.3 Punctuation & Noise Removal](#23-punctuation--noise-removal) · [2.4 Stemming](#24-stemming) · [2.5 Lemmatization](#25-lemmatization) · [2.6 Text Normalization](#26-text-normalization) · [2.7 Part-of-Speech (POS) Tagging](#27-part-of-speech-pos-tagging) · [2.8 Parsing](#28-parsing-dependency--constituency) · [2.9 Regex Cheatsheet for Text Cleaning](#29-regex-cheatsheet-for-text-cleaning) · [2.10 Full Preprocessing Pipeline](#210-full-reusable-preprocessing-pipeline)
+[2.1 Tokenization](#21-tokenization)
+[2.2 Stopword Removal](#22-stopword-removal)
+[2.3 Punctuation & Noise Removal](#23-punctuation--noise-removal)
+[2.4 Stemming](#24-stemming)
+[2.5 Lemmatization](#25-lemmatization)
+[2.6 Text Normalization](#26-text-normalization)
+[2.7 Part-of-Speech (POS) Tagging](#27-part-of-speech-pos-tagging)
+[2.8 Parsing](#28-parsing-dependency--constituency)
+[2.9 Regex Cheatsheet for Text Cleaning](#29-regex-cheatsheet-for-text-cleaning)
+[2.10 Full Preprocessing Pipeline](#210-full-reusable-preprocessing-pipeline)
 
 **[Part 3 — Text Representation & Embeddings](#part-3--text-representation--embeddings)**
-[3.1 One-Hot Encoding](#31-one-hot-encoding) · [3.2 Bag of Words](#32-bag-of-words-bow) · [3.3 TF-IDF](#33-term-frequency-inverse-document-frequency-tf-idf) · [3.4 N-Gram Language Modeling](#34-n-gram-language-modeling) · [3.5 LSA](#35-latent-semantic-analysis-lsa) · [3.6 LDA](#36-latent-dirichlet-allocation-lda) · [3.7 Word2Vec](#37-word2vec) · [3.8 GloVe](#38-glove) · [3.9 fastText](#39-fasttext) · [3.10 ELMo](#310-elmo-contextual-embeddings-legacy) · [3.11 BERT Embeddings](#311-bert-embeddings) · [3.12 Doc2Vec](#312-doc2vec) · [3.13 Sentence-BERT](#313-sentence-embeddings-sentence-bert) · [3.14 RoBERTa / DistilBERT](#314-roberta--distilbert) · [3.15 Comparison Table](#315-embedding-methods-comparison-table)
+[3.1 One-Hot Encoding](#31-one-hot-encoding)
+[3.2 Bag of Words](#32-bag-of-words-bow)
+[3.3 TF-IDF](#33-term-frequency-inverse-document-frequency-tf-idf)
+[3.4 N-Gram Language Modeling](#34-n-gram-language-modeling)
+[3.5 LSA](#35-latent-semantic-analysis-lsa)
+[3.6 LDA](#36-latent-dirichlet-allocation-lda)
+[3.7 Word2Vec](#37-word2vec)
+[3.8 GloVe](#38-glove)
+[3.9 fastText](#39-fasttext)
+[3.10 ELMo](#310-elmo-contextual-embeddings-legacy)
+[3.11 BERT Embeddings](#311-bert-embeddings)
+[3.12 Doc2Vec](#312-doc2vec)
+[3.13 Sentence-BERT](#313-sentence-embeddings-sentence-bert)
+[3.14 RoBERTa / DistilBERT](#314-roberta--distilbert)
+[3.15 Comparison Table](#315-embedding-methods-comparison-table)
 
 **[Part 4 — Core NLP Tasks](#part-4--core-nlp-tasks)**
-[4.1 Text Classification](#41-text-classification) · [4.2 Named Entity Recognition](#42-named-entity-recognition-ner) · [4.3 Text Summarization](#43-text-summarization) · [4.4 Sentiment Analysis](#44-sentiment-analysis) · [4.5 Machine Translation](#45-machine-translation) · [4.6 Question Answering](#46-question-answering) · [4.7 Topic Modeling Recap + BERTopic](#47-topic-modeling-recap--bertopic) · [4.8 Text Generation](#48-text-generation) · [4.9 Semantic Similarity & Search](#49-semantic-similarity--search) · [4.10 Coreference Resolution](#410-coreference-resolution) · [4.11 Text Clustering](#411-text-clustering)
+[4.1 Text Classification](#41-text-classification)
+[4.2 Named Entity Recognition](#42-named-entity-recognition-ner)
+[4.3 Text Summarization](#43-text-summarization)
+[4.4 Sentiment Analysis](#44-sentiment-analysis)
+[4.5 Machine Translation](#45-machine-translation)
+[4.6 Question Answering](#46-question-answering)
+[4.7 Topic Modeling Recap + BERTopic](#47-topic-modeling-recap--bertopic)
+[4.8 Text Generation](#48-text-generation)
+[4.9 Semantic Similarity & Search](#49-semantic-similarity--search)
+[4.10 Coreference Resolution](#410-coreference-resolution)
+[4.11 Text Clustering](#411-text-clustering)
 
 **[Part 5 — Transformer Architectures Deep-Dive](#part-5--transformer-architectures-deep-dive)**
-[5.1 Attention & Self-Attention](#51-attention--self-attention-the-math) · [5.2 The Transformer Architecture](#52-the-full-transformer-architecture) · [5.3 Subword Tokenization (BPE/WordPiece/SentencePiece)](#53-subword-tokenization-algorithms) · [5.4 The BERT Family](#54-the-bert-family-encoder-only) · [5.5 The GPT Family](#55-the-gpt-family-decoder-only) · [5.6 T5 / BART (Encoder-Decoder)](#56-t5--bart-encoder-decoder) · [5.7 pipeline() Task Reference](#57-the-pipeline-quick-task-reference) · [5.8 Manual AutoTokenizer/AutoModel Workflow](#58-manual-autotokenizerautomodel-workflow) · [5.9 Fine-Tuning with Trainer](#59-fine-tuning-with-the-trainer-api) · [5.10 Parameter-Efficient Fine-Tuning (LoRA/PEFT)](#510-parameter-efficient-fine-tuning-loraqlorapeft)
+[5.1 Attention & Self-Attention](#51-attention--self-attention-the-math)
+[5.2 The Transformer Architecture](#52-the-full-transformer-architecture)
+[5.3 Subword Tokenization (BPE/WordPiece/SentencePiece)](#53-subword-tokenization-algorithms)
+[5.4 The BERT Family](#54-the-bert-family-encoder-only)
+[5.5 The GPT Family](#55-the-gpt-family-decoder-only)
+[5.6 T5 / BART (Encoder-Decoder)](#56-t5--bart-encoder-decoder)
+[5.7 pipeline() Task Reference](#57-the-pipeline-quick-task-reference)
+[5.8 Manual AutoTokenizer/AutoModel Workflow](#58-manual-autotokenizerautomodel-workflow)
+[5.9 Fine-Tuning with Trainer](#59-fine-tuning-with-the-trainer-api)
+[5.10 Parameter-Efficient Fine-Tuning (LoRA/PEFT)](#510-parameter-efficient-fine-tuning-loraqlorapeft)
 
 **[Part 6 — Modern NLP: The LLM Era](#part-6--modern-nlp-the-llm-era)**
-[6.1 Prompt Engineering Basics](#61-prompt-engineering-basics) · [6.2 Retrieval-Augmented Generation (RAG)](#62-retrieval-augmented-generation-rag) · [6.3 Vector Databases](#63-vector-databases--similarity-search-at-scale) · [6.4 Calling LLM APIs](#64-calling-llm-apis-for-nlp-tasks) · [6.5 LangChain Quick Reference](#65-langchain-quick-reference)
+[6.1 Prompt Engineering Basics](#61-prompt-engineering-basics)
+[6.2 Retrieval-Augmented Generation (RAG)](#62-retrieval-augmented-generation-rag)
+[6.3 Vector Databases](#63-vector-databases--similarity-search-at-scale)
+[6.4 Calling LLM APIs](#64-calling-llm-apis-for-nlp-tasks)
+[6.5 LangChain Quick Reference](#65-langchain-quick-reference)
 
 **[Part 7 — Evaluation Metrics](#part-7--evaluation-metrics)**
-[7.1 Classification Metrics](#71-classification-metrics) · [7.2 BLEU / ROUGE / METEOR](#72-bleu--rouge--meteor-generationtranslationsummarization) · [7.3 Perplexity](#73-perplexity-language-model-quality) · [7.4 BERTScore](#74-bertscore-embedding-based-evaluation)
+[7.1 Classification Metrics](#71-classification-metrics)
+[7.2 BLEU / ROUGE / METEOR](#72-bleu--rouge--meteor-generationtranslationsummarization)
+[7.3 Perplexity](#73-perplexity-language-model-quality)
+[7.4 BERTScore](#74-bertscore-embedding-based-evaluation)
 
 **[Part 8 — End-to-End Worked Example](#part-8--end-to-end-worked-example)**
 
