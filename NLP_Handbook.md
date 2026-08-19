@@ -22,39 +22,67 @@
 
 **[Part 1 — Core Libraries](#part-1--core-libraries)**
 [1.1 NLTK](#11-nltk)
+
 [1.2 spaCy](#12-spacy)
+
 [1.3 TextBlob](#13-textblob)
+
 [1.4 Hugging Face Transformers](#14-hugging-face-transformers)
+
 [1.5 Gensim](#15-gensim)
+
 [1.6 Other Notable NLP Libraries](#16-other-notable-nlp-libraries)
 
 **[Part 2 — Text Preprocessing](#part-2--text-preprocessing)**
 [2.1 Tokenization](#21-tokenization)
+
 [2.2 Stopword Removal](#22-stopword-removal)
+
 [2.3 Punctuation & Noise Removal](#23-punctuation--noise-removal)
+
 [2.4 Stemming](#24-stemming)
+
 [2.5 Lemmatization](#25-lemmatization)
+
 [2.6 Text Normalization](#26-text-normalization)
+
 [2.7 Part-of-Speech (POS) Tagging](#27-part-of-speech-pos-tagging)
+
 [2.8 Parsing](#28-parsing-dependency--constituency)
+
 [2.9 Regex Cheatsheet for Text Cleaning](#29-regex-cheatsheet-for-text-cleaning)
+
 [2.10 Full Preprocessing Pipeline](#210-full-reusable-preprocessing-pipeline)
 
 **[Part 3 — Text Representation & Embeddings](#part-3--text-representation--embeddings)**
 [3.1 One-Hot Encoding](#31-one-hot-encoding)
+
 [3.2 Bag of Words](#32-bag-of-words-bow)
+
 [3.3 TF-IDF](#33-term-frequency-inverse-document-frequency-tf-idf)
+
 [3.4 N-Gram Language Modeling](#34-n-gram-language-modeling)
+
 [3.5 LSA](#35-latent-semantic-analysis-lsa)
+
 [3.6 LDA](#36-latent-dirichlet-allocation-lda)
+
 [3.7 Word2Vec](#37-word2vec)
+
 [3.8 GloVe](#38-glove)
+
 [3.9 fastText](#39-fasttext)
+
 [3.10 ELMo](#310-elmo-contextual-embeddings-legacy)
+
 [3.11 BERT Embeddings](#311-bert-embeddings)
+
 [3.12 Doc2Vec](#312-doc2vec)
+
 [3.13 Sentence-BERT](#313-sentence-embeddings-sentence-bert)
+
 [3.14 RoBERTa / DistilBERT](#314-roberta--distilbert)
+
 [3.15 Comparison Table](#315-embedding-methods-comparison-table)
 
 **[Part 4 — Core NLP Tasks](#part-4--core-nlp-tasks)**
