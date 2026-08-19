@@ -12,6 +12,7 @@
 - [Parquet, Feather, APIs & Cloud](#3-parquet-feather-apis--cloud)
 
 ### 🧹 Data Cleaning
+- [Drop row, column and specific value](#drop-row-column-and-specific-value)
 - [Missing Values & Duplicates](#4-missing-values--duplicates)
 - [Dtypes, Type Conversion & Dates](#5-dtypes-type-conversion--dates)
 - [Outlier Detection & Treatment](#6-outlier-detection--treatment)
@@ -366,6 +367,50 @@ df = pd.DataFrame(records)
 
 ## 4. Missing Values & Duplicates
 
+### Drop row, column and specific value
+```python
+import pandas as pd
+import numpy as np
+
+## Drop Rows
+
+# Drop Rows by Index Label
+df = df.drop(index=0)             # Drop a single row by its index label
+df = df.drop(index=[1, 3, 5])     # Drop multiple rows by passing a list of index labels
+
+# Drop Rows Based on a Condition (Boolean Indexing)
+df = df[df['Age'] >= 25]                       # Drops all rows where the Age is less than 25 (keeps Age >= 25)
+df = df.drop(df[df['Age'] < 25].index)         # Alternative: Find matching indices and drop them explicitly
+
+# Drop Rows by Numerical Position (Slicing)
+df = df.iloc[2:]   # Drop the first 2 rows
+df = df.iloc[:-3]  # Drop the last 3 rows
+
+# Drop rows based on a specific column value
+matching_indices = df[df['Your_Column_Name'] == '<Spacific_value>'].index    # Find the index labels for matching rows
+df = df.drop(index=matching_indices)                                 # Drop those specific indices
+
+
+## Drop Column
+df = df.drop(columns='col')                     # Single Column
+df = df.drop(columns=['col1', 'col2', 'col3'])  # Multiple Columns
+df = df.drop('col', axis=1)                     # Using Axis
+
+# Drop Column if it Contains a Specific Value
+cols_to_drop = [col for col in df.columns if (df[col] == '<Spacific_value_name>').any()]   # Identify which columns contain the target value
+df = df.drop(columns=cols_to_drop)                                            # Drop those specific columns
+
+# Drop Column if All Values Match
+# Drops columns where EVERY row is '<Spacific_value_name>'
+cols_to_drop = [col for col in df.columns if (df[col] == '<Spacific_value_name>').all()]
+df = df.drop(columns=cols_to_drop)
+
+# Drop Column Based on a Numeric Threshold
+cols_to_drop = [col for col in df.columns if df[col].max() > 100]
+df = df.drop(columns=cols_to_drop)
+
+
+```
 ### Detecting & Removing Nulls
 
 ```python
@@ -485,14 +530,22 @@ df["date"] = pd.to_datetime(df["date"],
 # Extract components
 df["year"]    = df["date"].dt.year
 df["month"]   = df["date"].dt.month
+df["month"]   = df["date"].dt.month_name()
 df["day"]     = df["date"].dt.day
 df["weekday"] = df["date"].dt.day_name()
 df["quarter"] = df["date"].dt.quarter
 df["week"]    = df["date"].dt.isocalendar().week
 df["hour"]    = df["date"].dt.hour
+df["is_wknd"] = df["date"].dt.dayofweek
 df["is_wknd"] = df["date"].dt.dayofweek >= 5
+df["wk_of_year"] = df["date"].dt.week
 
 # Timedelta
+df["time"] = df["date"].dt.time
+df["hours"] = df["date"].dt.hour
+df["minutes"] = df["date"].dt.minute
+df["sec"] = df["date"].dt.second
+
 df["days_since"] = (pd.Timestamp.today() - df["date"]).dt.days
 df["age_years"]  = df["days_since"] / 365.25
 
@@ -2084,11 +2137,10 @@ svr = SVR(C=10, kernel="rbf", gamma="scale", epsilon=0.1)
 lsvc = LinearSVC(C=1.0, max_iter=5000, class_weight="balanced")
 ```
 
-### KNN & Naive Bayes
+### K - Nearest Neighbour(KNN)
 
 ```python
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 # KNN Classifier (scale features!)
 knn = KNeighborsClassifier(
@@ -2107,6 +2159,13 @@ for k in range(1, 30):
     sc  = cross_val_score(knn, X_scaled, y, cv=5).mean()
     k_scores.append(sc)
 best_k = np.argmax(k_scores) + 1
+```
+
+
+### KNN & Naive Bayes
+
+```python
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 # Gaussian Naive Bayes (continuous features)
 gnb = GaussianNB(var_smoothing=1e-9)
@@ -2965,12 +3024,37 @@ from imblearn.under_sampling import RandomUnderSampler, TomekLinks
 from imblearn.combine import SMOTETomek, SMOTEENN
 from imblearn.pipeline import Pipeline as ImbPipeline
 
-# SMOTE — synthetic minority oversampling
-sm          = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=42)
+# Applying Random Under Sampling
+from imblearn.under_sampling import RandomUnderSampler
+
+rus = RandomUnderSampler(random_state=42)
+X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+
+# Applying Random Over Sampling
+from imblearn.over_sampling import RandomOverSampler
+
+ros = RandomOverSampler(random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X_train, y_train)
+
+# Applying Ensemble Method/ Balanced Random Forest (Recomanded)
+from imblearn.ensemble import BalancedRandomForestClassifier
+
+classifier = BalancedRandomForestClassifier(random_state=42)
+classifier.fit(X_train, y_train)
+
+# Cost Sensitive Learning/ Class Weights 
+# Create a logistic regression model with class weights
+model = LogisticRegression(class_weight={0:50,1:1}, solver='liblinear')   # Can take other models also
+
+# Train the model
+model.fit(X_train, y_train)
+
+# SMOTE — synthetic minority oversampling (Recomanded)
+sm = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=42)
 X_res, y_res = sm.fit_resample(X_train, y_train)
 
 # Combined over+under sampling
-smt          = SMOTETomek(random_state=42)
+smt = SMOTETomek(random_state=42)
 X_res, y_res = smt.fit_resample(X_train, y_train)
 
 # In a pipeline (avoids leakage)
