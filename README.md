@@ -2363,6 +2363,10 @@ ts = df.set_index("date")["value"]
 decomp = seasonal_decompose(ts, model="additive", period=12)
 decomp.plot(); plt.tight_layout()
 
+trend_additive = decompostion_additive.trend
+seasonal_additive = decompostion_seasonal.trend
+residual_additive = decompostion_residual.trend
+
 # STL (robust)
 stl    = STL(ts, period=12, robust=True)
 result = stl.fit()
