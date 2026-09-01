@@ -2375,6 +2375,12 @@ result.plot()
 
 ### Stationarity
 ```python
+import pandas as pd, numpy as np
+from statsmodels.tsa.stattools import adfuller, acf, pacf, kpss
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+import matplotlib.pyplot as plt
+from scipy.stats import ks_2samp
+
 ## Weak Stationary 
 # ADF test — H0: non-stationary
 adf_stat, adf_p, _, _, crit, _ = adfuller(ts.dropna())
@@ -2402,10 +2408,6 @@ for key, value in kpss_test{3}.items():
 
 ## Strict Stationary
 # KS test
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import ks_2samp
-
 np.random.seed(0)    # Generating synthetic data for demonstration
 n = 500
 # Strictly stationary series: normally distributed random noise
