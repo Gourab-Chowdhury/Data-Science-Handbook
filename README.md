@@ -2353,7 +2353,7 @@ anomalies = recon_error > threshold
 ```python
 import pandas as pd, numpy as np
 from statsmodels.tsa.seasonal import seasonal_decompose, STL
-from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.tsa.stattools import adfuller, acf, pacf, kpss
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.pyplot as plt
 
@@ -2383,6 +2383,18 @@ fig, (ax1, ax2) = plt.subplots(2,1, figsize=(12,6))
 plot_acf(ts.dropna(),  lags=40, ax=ax1)
 plot_pacf(ts.dropna(), lags=40, ax=ax2, method="ywm")
 plt.tight_layout()
+
+
+# KPSS Test
+kpss_test = kpss(ts['Close"], regression='ct')
+
+print('KPSS Test Results:')
+print(f'KPSS Statistics: {round(kpss_test[0],2}')
+print(f'p-value: {kpss_test[1]}')
+print("Critical Values:")
+for key, value in kpss_test{3}.items():
+    print(f"  {key}: {value}")
+
 ```
 
 ### ARIMA, SARIMA, Prophet & ML
