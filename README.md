@@ -2408,16 +2408,8 @@ for key, value in kpss_test{3}.items():
 
 ## Strict Stationary
 # KS test
-np.random.seed(0)    # Generating synthetic data for demonstration
-n = 500
-# Strictly stationary series: normally distributed random noise
-strict_stationary_series = np.random.normal(0, 1, n)
-
-# Non-strictly stationary series: changing variance
-non_strict_stationary_series = np.concatenate([
-    np.random.normal(0, 1, n // 2),
-    np.random.normal(0, 2, n // 2)
-])
+strict_stationary_series = ts        # Strictly stationary series
+non_strict_stationary_series = ts    # Non-strictly stationary series
 
 # Function to split the series into two halves and perform the K-S test
 def ks_test_stationarity(series):
