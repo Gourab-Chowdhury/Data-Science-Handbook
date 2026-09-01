@@ -2372,6 +2372,7 @@ stl    = STL(ts, period=12, robust=True)
 result = stl.fit()
 result.plot()
 
+## Weak Stationary 
 # ADF test — H0: non-stationary
 adf_stat, adf_p, _, _, crit, _ = adfuller(ts.dropna())
 print(f"ADF p-value: {adf_p:.4f}")
@@ -2394,6 +2395,44 @@ print(f'p-value: {kpss_test[1]}')
 print("Critical Values:")
 for key, value in kpss_test{3}.items():
     print(f"  {key}: {value}")
+
+
+## Strict Stationary
+# KS test
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import ks_2samp
+
+np.random.seed(0)    # Generating synthetic data for demonstration
+n = 500
+# Strictly stationary series: normally distributed random noise
+strict_stationary_series = np.random.normal(0, 1, n)
+
+# Non-strictly stationary series: changing variance
+non_strict_stationary_series = np.concatenate([
+    np.random.normal(0, 1, n // 2),
+    np.random.normal(0, 2, n // 2)
+])
+
+# Function to split the series into two halves and perform the K-S test
+def ks_test_stationarity(series):
+    split = len(series) // 2
+    series_first_half = series[:split]
+    series_second_half = series[split:]
+    stat, p_value = ks_2samp(series_first_half, series_second_half)
+    return stat, p_value
+
+# Perform the K-S test on strictly stationary series
+ks_stat_strict, ks_pvalue_strict = ks_test_stationarity(strict_stationary_series)
+
+# Perform the K-S test on non-strictly stationary series
+ks_stat_non_strict, ks_pvalue_non_strict = ks_test_stationarity(non_strict_stationary_series)
+
+# Plotting the series
+plt.figure(figsize=(14, 6))
+
+
+
 
 ```
 
