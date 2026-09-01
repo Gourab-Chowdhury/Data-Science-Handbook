@@ -2348,7 +2348,7 @@ anomalies = recon_error > threshold
 
 ## 28. Time Series Analysis & Forecasting
 
-### Decomposition & Stationarity
+### Decomposition
 
 ```python
 import pandas as pd, numpy as np
@@ -2371,7 +2371,10 @@ residual_additive = decompostion_residual.trend
 stl    = STL(ts, period=12, robust=True)
 result = stl.fit()
 result.plot()
+```
 
+### Stationarity
+```python
 ## Weak Stationary 
 # ADF test — H0: non-stationary
 adf_stat, adf_p, _, _, crit, _ = adfuller(ts.dropna())
@@ -2431,10 +2434,9 @@ ks_stat_non_strict, ks_pvalue_non_strict = ks_test_stationarity(non_strict_stati
 # Plotting the series
 plt.figure(figsize=(14, 6))
 
-
-
-
 ```
+
+
 
 ### ARIMA, SARIMA, Prophet & ML
 
