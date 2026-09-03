@@ -2449,42 +2449,29 @@ prices_sqrt = np.sqrt(prices)
 prices_boxcox, lam = stats.boxcox(prices[prices>0])
 
 
-
 # Detranding
 ## Linear Detranding
 from scipy import signal
-
-# Using a linear trend
 trend = np.polyfit(np.arange(len(prices)), prices, 1)
 trendline = np.polyval(trend, np.arange(len(prices)))
 prices_detrended = prices - trendline
-
-plt.plot(np.arange(len(prices)), trendline)
+plt.plot(np.arange(len(prices)), trendline)  # Plotting 
 plt.plot()
-
-
 
 ## Moving Average Detrending
 window = 12 # example window size
 prices_ma = prices.rolling(window=window).mean()
 prices_detrended = prices - prices_ma
 prices_detrended = prices_detrended.dropna()
-
-plt.plot(np.arange(len(prices)), prices_ma)
+plt.plot(np.arange(len(prices)), prices_ma)   # Plotting 
 plt.plot(np.arange(len(prices)), prices)
 plt.show()
 
-
 ## Seasonal Adjustment
 from statsmodels.tsa.seasonal import seasonal_decompose
-
-# Seasonal decomposition using moving averages
 decomposition = seasonal_decompose(prices, model='additive', period=30)
 prices_adjusted = prices / decomposition.seasonal
 prices_adjusted = prices_adjusted.dropna()
-
-adf_test(prices_adjusted)
-
 ```
 
 
