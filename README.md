@@ -2432,6 +2432,9 @@ plt.tight_layout()
 from statsmodels.stats.diagnostic import acorr_ljungbox
 lb_test_white_noise = acorr_ljungbox(white_noise, lags=[10], return_df=True)
 print(lb_test_white_noise)
+
+lb_test_white_noise = acorr_ljungbox(random_walk, lags=[10], return_df=True)
+print(lb_test_white_noise)
 ```
 
 ### Making data stationary
