@@ -2421,14 +2421,14 @@ ks_stat_non_strict, ks_pvalue_non_strict = ks_test_stationarity(non_strict_stati
 plt.figure(figsize=(14, 6))
 
 
-# Checking White Noise and Random Walk
-## ACF & PACF (determine AR/MA orders)
+## Checking White Noise and Random Walk
+# ACF & PACF (determine AR/MA orders)
 fig, (ax1, ax2) = plt.subplots(2,1, figsize=(12,6))
 plot_acf(ts.dropna(),  lags=40, ax=ax1)
 plot_pacf(ts.dropna(), lags=40, ax=ax2, method="ywm")
 plt.tight_layout()
 
-## Ljung-Box test
+# Ljung-Box test
 from statsmodels.stats.diagnostic import acorr_ljungbox
 lb_test_white_noise = acorr_ljungbox(white_noise, lags=[10], return_df=True)
 print(lb_test_white_noise)
@@ -2436,25 +2436,25 @@ print(lb_test_white_noise)
 
 ### Making data stationary
 ```python
-# Differencing 
+## Differencing 
 # prices -> series data column
 prices.diff() # 1st order differencing
 prices.diff().diff() # 2nd order differencing
 
 
-# Transformation
-## Logarithmic Transformation
+## Transformation
+# Logarithmic Transformation
 prices_log = np.log(prices)
 
-## Power/Square-root Transformation
+# Power/Square-root Transformation
 prices_sqrt = np.sqrt(prices)
 
-## Box-Cox Transformation
+# Box-Cox Transformation
 prices_boxcox, lam = stats.boxcox(prices[prices>0])
 
 
-# Detranding
-## Linear Detranding
+## Detranding
+# Linear Detranding
 from scipy import signal
 trend = np.polyfit(np.arange(len(prices)), prices, 1)
 trendline = np.polyval(trend, np.arange(len(prices)))
@@ -2462,7 +2462,7 @@ prices_detrended = prices - trendline
 plt.plot(np.arange(len(prices)), trendline)  # Plotting 
 plt.plot()
 
-## Moving Average Detrending
+# Moving Average Detrending
 window = 12 # example window size
 prices_ma = prices.rolling(window=window).mean()
 prices_detrended = prices - prices_ma
@@ -2471,7 +2471,7 @@ plt.plot(np.arange(len(prices)), prices_ma)   # Plotting
 plt.plot(np.arange(len(prices)), prices)
 plt.show()
 
-## Seasonal Adjustment
+# Seasonal Adjustment
 from statsmodels.tsa.seasonal import seasonal_decompose
 decomposition = seasonal_decompose(prices, model='additive', period=30)
 prices_adjusted = prices / decomposition.seasonal
