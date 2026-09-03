@@ -2388,16 +2388,8 @@ print(f"ADF p-value: {adf_p:.4f}")
 if adf_p >= 0.05:
     ts_diff = ts.diff().dropna()   # first difference
 
-# ACF & PACF (determine AR/MA orders)
-fig, (ax1, ax2) = plt.subplots(2,1, figsize=(12,6))
-plot_acf(ts.dropna(),  lags=40, ax=ax1)
-plot_pacf(ts.dropna(), lags=40, ax=ax2, method="ywm")
-plt.tight_layout()
-
-
 # KPSS Test
 kpss_test = kpss(ts['Close"], regression='ct')
-
 print('KPSS Test Results:')
 print(f'KPSS Statistics: {round(kpss_test[0],2}')
 print(f'p-value: {kpss_test[1]}')
@@ -2428,6 +2420,18 @@ ks_stat_non_strict, ks_pvalue_non_strict = ks_test_stationarity(non_strict_stati
 # Plotting the series
 plt.figure(figsize=(14, 6))
 
+
+# Checking White Noise and Random Walk
+## ACF & PACF (determine AR/MA orders)
+fig, (ax1, ax2) = plt.subplots(2,1, figsize=(12,6))
+plot_acf(ts.dropna(),  lags=40, ax=ax1)
+plot_pacf(ts.dropna(), lags=40, ax=ax2, method="ywm")
+plt.tight_layout()
+
+## Ljung-Box test
+from statsmodels.stats.diagnostic import acorr_ljungbox
+lb_test_white_noise = acorr_ljungbox(white_noise, lags=[10], return_df=True)
+print(lb_test_white_noise)
 ```
 
 ### Making data stationary
