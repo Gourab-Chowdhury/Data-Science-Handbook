@@ -2555,9 +2555,30 @@ m.plot(forecast); m.plot_components(forecast)
 
 #perform Granger-Causality test
 from statsmodels.tsa.stattools import grangercausalitytests
-grangercausalitytests(stock_data[['APPL_Close', 'TSLA_Close']].dropna(), maxlag=[14])
+grangercausalitytests(stock_data[['1st TS Data', '2nd TS Data']].dropna(), maxlag=[14])
 print()
 
+# --- VAR ---
+from statsmodels.tsa.api import VAR, VARMAX
+model = VAR(train_data)
+result = model.fit(maxlags=7)
+predictions = result.forecast(train_data.values[-result.k_ar:], steps=len(test_data))
+
+# --- VMA ---
+model = VARMAX(train_data, order = (0,14))
+result = model.fit()
+predictions = result.predict(
+           start=len(train_data),
+           end=len(train_data) + len(test_data)-1,
+           dynamic=False)
+
+# --- VARIMA ---
+model = VARMAX(train_data, order = (14,14))
+result = model.fit()
+predictions = result.predict(
+           start=len(train_data),
+           end=len(train_data) + len(test_data)-1,
+           dynamic=False)
 ```
 
 ---
