@@ -2482,7 +2482,7 @@ prices_adjusted = prices_adjusted.dropna()
 ```
 
 
-### ARIMA, SARIMA, Prophet & ML
+### AR, MV, ARMA, ARIMA, Auto ARIMA, SARIMA, Prophet & ML
 
 ```python
 from statsmodels.tsa.ar_model import AutoReg
@@ -2493,6 +2493,7 @@ from pmdarima import auto_arima       # pip install pmdarima
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from prophet import Prophet           # pip install prophet
 
+## ----- Univariant ----- 
 # --- Auto Regression ---
 model    = AutoReg(train_data, lags = 30)
 
@@ -2548,6 +2549,15 @@ m.fit(df_p)
 future   = m.make_future_dataframe(periods=90, freq="D")
 forecast = m.predict(future)
 m.plot(forecast); m.plot_components(forecast)
+
+
+## ----- Multivariant -----
+
+#perform Granger-Causality test
+from statsmodels.tsa.stattools import grangercausalitytests
+grangercausalitytests(stock_data[['APPL_Close', 'TSLA_Close']].dropna(), maxlag=[14])
+print()
+
 ```
 
 ---
