@@ -2359,7 +2359,7 @@ import matplotlib.pyplot as plt
 
 ts = df.set_index("date")["value"]
 
-# Decomposition
+# ----- Additive -----
 decomp = seasonal_decompose(ts, model="additive", period=12)
 decomp.plot(); plt.tight_layout()
 
@@ -2367,7 +2367,7 @@ trend_additive = decompostion_additive.trend
 seasonal_additive = decompostion_seasonal.trend
 residual_additive = decompostion_residual.trend
 
-# STL (robust)
+# ----- STL (robust) -----
 stl    = STL(ts, period=12, robust=True)
 result = stl.fit()
 result.plot()
@@ -2381,14 +2381,14 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.pyplot as plt
 from scipy.stats import ks_2samp
 
-## Weak Stationary 
-# ADF test — H0: non-stationary
+## ----- Weak Stationary ----- 
+# --- ADF test — H0: non-stationary ---
 adf_stat, adf_p, _, _, crit, _ = adfuller(ts.dropna())
 print(f"ADF p-value: {adf_p:.4f}")
 if adf_p >= 0.05:
     ts_diff = ts.diff().dropna()   # first difference
 
-# KPSS Test
+# --- KPSS Test ---
 kpss_test = kpss(ts['Close"], regression='ct')
 print('KPSS Test Results:')
 print(f'KPSS Statistics: {round(kpss_test[0],2}')
@@ -2398,8 +2398,8 @@ for key, value in kpss_test{3}.items():
     print(f"  {key}: {value}")
 
 
-## Strict Stationary
-# KS test
+## ----- Strict Stationary -----
+# --- KS test ---
 strict_stationary_series = ts        # Strictly stationary series
 non_strict_stationary_series = ts    # Non-strictly stationary series
 
@@ -2422,13 +2422,13 @@ plt.figure(figsize=(14, 6))
 
 
 ## Checking White Noise and Random Walk
-# ACF & PACF (determine AR/MA orders)
+# ----- ACF & PACF (determine AR/MA orders) -----
 fig, (ax1, ax2) = plt.subplots(2,1, figsize=(12,6))
 plot_acf(ts.dropna(),  lags=40, ax=ax1)
 plot_pacf(ts.dropna(), lags=40, ax=ax2, method="ywm")
 plt.tight_layout()
 
-# Ljung-Box test
+# ----- Ljung-Box test -----
 from statsmodels.stats.diagnostic import acorr_ljungbox
 lb_test_white_noise = acorr_ljungbox(white_noise, lags=[10], return_df=True)
 print(lb_test_white_noise)
@@ -2439,13 +2439,13 @@ print(lb_test_white_noise)
 
 ### Making data stationary
 ```python
-## Differencing 
+## ----- Differencing -----
 # prices -> series data column
 prices.diff() # 1st order differencing
 prices.diff().diff() # 2nd order differencing
 
 
-## Transformation
+## ----- Transformation -----
 # Logarithmic Transformation
 prices_log = np.log(prices)
 
@@ -2456,7 +2456,7 @@ prices_sqrt = np.sqrt(prices)
 prices_boxcox, lam = stats.boxcox(prices[prices>0])
 
 
-## Detranding
+## ----- Detranding -----
 # Linear Detranding
 from scipy import signal
 trend = np.polyfit(np.arange(len(prices)), prices, 1)
@@ -2485,9 +2485,25 @@ prices_adjusted = prices_adjusted.dropna()
 ### ARIMA, SARIMA, Prophet & ML
 
 ```python
+from statsmodels.tsa.ar_model import AutoReg
+from sklearn.metrics import mean_squared_error
+from statsmodel.tsa.arima.model import ARIMA
+
 from pmdarima import auto_arima       # pip install pmdarima
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from prophet import Prophet           # pip install prophet
+
+# --- Auto Regression ---
+model    = AutoReg(train_data, lags = 30)
+
+# --- Moving Average ---
+model    = ARIMA(train_data, order(0,0,30))
+
+# --- ARMA Model ---
+model    = ARIMA(train_data, order(7,0,7))
+
+# --- ARIMA Model ---
+model    = ARIMA(train_data, order(7,1,7))
 
 # --- Auto ARIMA ---
 model    = auto_arima(ts_train, m=12, seasonal=True,
@@ -2500,6 +2516,28 @@ sarima = SARIMAX(ts_train, order=(1,1,1), seasonal_order=(1,1,1,12))
 result = sarima.fit(disp=False)
 fc     = result.forecast(steps=12)
 conf   = result.get_forecast(12).conf_int()
+
+
+# Fit, Prediction & evaluation of AR, MA, ARMA, ARIMA,
+model_fit = model.fit()
+# Make predictions on the test data
+predictions = model_fit.predict(
+         start=len(train_data),
+         end=len(train_data) + len(test_data)-1,
+         dynamic=False)
+# Plot the actual vs predicted values
+plt.figure(figsize=(10, 5))
+plt.plot(test_data.index, test_data, label='Test data')
+plt.plot(test_data.index, predictions, color='red', linestyle='--', label='Predicted Prices')
+plt.title('Apple Stock Prices: Actual vs Predicted')
+plt.xlabel('Date')
+plt.ylabel('Close Price')
+plt.legend()
+plt.show()
+# evaluating model using RMSE score
+rmse = round(np.sqrt(mean_squared_error(test_data, predictions)),2)
+print('RMSE: ',rmse)
+
 
 # --- Prophet ---
 df_p = df.rename(columns={"date":"ds","value":"y"})
