@@ -2581,6 +2581,38 @@ predictions = result.predict(
            dynamic=False)
 ```
 
+### Smoothing Techniques
+```python
+## ----- Moving Average -----
+# --- Single moving average ---
+window_size = x
+dataset['SMA'] = dataset.rolling(window=window_size).mean()
+
+# --- Weighted Moving Average ---
+weights = np.agange(1, window_size+1)
+dataset['WMA'] = dataset.rolling(window_size).apply(lambda prices: np.dot(prices, weights)/ weights.sum(), raw=True)
+
+# --- Exponential Moving Average ---
+dataset['EWA'] = dataset.ewm(span = window_size).mean()
+
+
+## ----- Exponential Smoothing -----
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing, ExponentialSmoothing
+
+# Simple Exponential Smoothing
+ses_model = SimpleExpSmoothing(dataset).fit(smoothing_level=0.7)
+stock_data['SES'] = ses_model.fittedvalues
+
+# Double Exponential Smoothing (DES) - Holt's Linear trend model
+des_model = ExponentialSmoothing(dataset, trend='add').fit(smoothing_level=0.7)
+stock_data['DES'] = des_model.fittedvalues
+
+# Triple Exponential Smoothing (TES) - Holt-Winters method
+tes_model = ExponentialSmoothing(dataset, trend='add', seasonal='add', seasonal_periods=12).fit(smoothing_level=0.7)
+stock_data['TES'] = tes_model.fittedvalues
+```
+
+
 ---
 
 ## 29. NLP Basics
